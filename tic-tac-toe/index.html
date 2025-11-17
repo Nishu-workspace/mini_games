@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pixel Tic Tac Toe</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Pixel Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+
+    <style>
+        /* Define the pixel theme class */
+        .pixel-theme {
+            font-family: 'Press Start 2P', cursive;
+            image-rendering: pixelated;
+            -ms-interpolation-mode: nearest-neighbor;
+            image-rendering: -moz-crisp-edges;
+            image-rendering: crisp-edges;
+        }
+
+        /* Base element styling */
+        body,
+        html {
+            background-color: #303030;
+            /* Dark retro gray */
+            color: #E0E0E0;
+            overflow-x: hidden;
+            height: 100%;
+        }
+
+        /* Pixel-style container/panel */
+        .pixel-panel {
+            background-color: #424242;
+            border: 4px solid #000000;
+            box-shadow: 8px 8px 0px 0px rgba(0, 0, 0, 1);
+            padding: 24px;
+        }
+
+        /* Pixel-style button */
+        .pixel-button {
+            font-family: 'Press Start 2P', cursive;
+            border: 4px solid #000000;
+            background-color: #E0E0E0;
+            color: #000000;
+            padding: 12px 16px;
+            text-align: center;
+            cursor: pointer;
+            box-shadow: 4px 4px 0px 0px rgba(0, 0, 0, 1);
+            transition: all 0.05s ease-in-out;
+            text-shadow: none;
+        }
+
+        .pixel-button:hover {
+            background-color: #D0D0D0;
+        }
+
+        .pixel-button:active {
+            box-shadow: none;
+            transform: translate(4px, 4px);
+        }
+
+        .pixel-button:disabled {
+            background-color: #757575;
+            color: #BDBDBD;
+            box-shadow: 4px 4px 0px 0px rgba(0, 0, 0, 0.5);
+            cursor: not-allowed;
+        }
+
+        /* Specific button colors */
+        .pixel-button-primary {
+            background-color: #90EE90;
+            /* Light Green */
+        }
+
+        .pixel-button-primary:hover {
+            background-color: #80E080;
+        }
+
+        .pixel-button-secondary {
+            background-color: #ADD8E6;
+            /* Light Blue */
+        }
+
+        .pixel-button-secondary:hover {
+            background-color: #9CD0E0;
+        }
+
+        .pixel-button-reset {
+            background-color: #FFB6C1;
+            /* Light Pink/Red */
+        }
+
+        .pixel-button-reset:hover {
+            background-color: #FFA0B0;
+        }
+
+        /* Pixel-style input */
+        .pixel-input {
+            font-family: 'Press Start 2P', cursive;
+            border: 4px solid #000000;
+            background-color: #FFFFFF;
+            padding: 12px;
+            width: 100%;
+            font-size: 14px;
+            color: #333;
+        }
+
+        .pixel-input::placeholder {
+            color: #AAAAAA;
+        }
+
+        .pixel-input:disabled {
+            background-color: #BDBDBD;
+        }
+
+        /* Game Board Cell */
+        .game-cell {
+            width: 100%;
+            aspect-ratio: 1 / 1;
+            /* Make it square */
+            border: 4px solid #000000;
+            background-color: #616161;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            /* Large X/O */
+            line-height: 1;
+            cursor: pointer;
+            transition: background-color 0.1s;
+        }
+
+        .game-cell:hover {
+            background-color: #757575;
+        }
+
+        /* Player colors */
+        .player-1 {
+            color: #87CEEB;
+            /* Sky Blue */
+        }
+
+        .player-2 {
+            color: #FFD700;
+            /* Gold */
+        }
+
+        /* Icon Selector */
+        .icon-select-btn {
+            width: 48px;
+            height: 48px;
+            border: 4px solid #000;
+            background-color: #757575;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .icon-select-btn:hover {
+            background-color: #9E9E9E;
+        }
+
+        .icon-select-btn.selected {
+            background-color: #90EE90;
+            box-shadow: inset 0 0 0 4px #000;
+        }
+
+        .icon-select-btn:disabled {
+            background-color: #424242;
+            color: #616161;
+            cursor: not-allowed;
+        }
+
+        /* Hide utility */
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+
+<body class="pixel-theme h-full w-full flex items-center justify-center p-4">
+
+    <div class="w-full max-w-sm">
+
+        <!-- Game Mode Selection Screen -->
+        <div id="start-screen" class="pixel-panel text-center">
+            <h1 class="text-3xl mb-6">PIXEL<br>TIC TAC TOE</h1>
+            <div class="space-y-4">
+                <button id="vs-cpu-btn" class="pixel-button pixel-button-primary w-full text-sm">VS CPU</button>
+                <button id="vs-player-btn" class="pixel-button pixel-button-secondary w-full text-sm">VS PLAYER</button>
+            </div>
+        </div>
+
+        <!-- Player Setup Screen -->
+        <div id="setup-screen" class="pixel-panel hidden">
+            <h2 class="text-xl text-center mb-4">PLAYER SETUP</h2>
+
+            <!-- Player 1 Setup -->
+            <div class="mb-6">
+                <label for="p1-name" class="text-sm mb-2 block">PLAYER 1</label>
+                <input type="text" id="p1-name" class="pixel-input text-sm" placeholder="OPTIONAL NAME">
+                <div id="p1-icon-select" class="grid grid-cols-6 gap-2 mt-3">
+                    <!-- Icons injected by JS -->
+                </div>
+            </div>
+
+            <!-- Player 2 Setup -->
+            <div class="mb-6">
+                <label for="p2-name" id="p2-name-label" class="text-sm mb-2 block">PLAYER 2</label>
+                <input type="text" id="p2-name" class="pixel-input text-sm" placeholder="OPTIONAL NAME">
+                <div id="p2-icon-select" class="grid grid-cols-6 gap-2 mt-3">
+                    <!-- Icons injected by JS -->
+                </div>
+            </div>
+
+            <button id="start-game-btn" class="pixel-button pixel-button-primary w-full text-sm">START GAME</button>
+            <button id="setup-back-btn" class="pixel-button w-full text-sm mt-4">BACK</button>
+        </div>
+
+        <!-- Game Screen -->
+        <div id="game-screen" class="hidden">
+            <h1 id="message-area" class="text-lg text-center mb-4 h-12 leading-snug">PLAYER 1'S TURN</h1>
+
+            <!-- Game Board -->
+            <div class="grid grid-cols-3 gap-2 pixel-panel bg-black">
+                <!-- Cells will be indexed 0-8 -->
+                <div class="game-cell" data-index="0"></div>
+                <div class="game-cell" data-index="1"></div>
+                <div class="game-cell" data-index="2"></div>
+                <div class="game-cell" data-index="3"></div>
+                <div class="game-cell" data-index="4"></div>
+                <div class="game-cell" data-index="5"></div>
+                <div class="game-cell" data-index="6"></div>
+                <div class="game-cell" data-index="7"></div>
+                <div class="game-cell" data-index="8"></div>
+            </div>
+
+            <button id="reset-btn" class="pixel-button pixel-button-reset w-full text-sm mt-6">RESET</button>
+            <button id="main-menu-btn" class="pixel-button w-full text-sm mt-4">MAIN MENU</button>
+        </div>
+
+    </div>
+
+    <!-- Game Logic -->
+    <script>
+        // DOM Elements
+        const startScreen = document.getElementById('start-screen');
+        const setupScreen = document.getElementById('setup-screen');
+        const gameScreen = document.getElementById('game-screen');
+
+        const vsCpuBtn = document.getElementById('vs-cpu-btn');
+        const vsPlayerBtn = document.getElementById('vs-player-btn');
+        const setupBackBtn = document.getElementById('setup-back-btn');
+        const startGameBtn = document.getElementById('start-game-btn');
+
+        const resetBtn = document.getElementById('reset-btn');
+        const mainMenuBtn = document.getElementById('main-menu-btn'); // Was backBtn
+        const messageArea = document.getElementById('message-area');
+        const gameCells = document.querySelectorAll('.game-cell');
+
+        // Setup Screen Elements
+        const p1NameInput = document.getElementById('p1-name');
+        const p2NameInput = document.getElementById('p2-name');
+        const p2NameLabel = document.getElementById('p2-name-label');
+        const p1IconSelect = document.getElementById('p1-icon-select');
+        const p2IconSelect = document.getElementById('p2-icon-select');
+
+        // Game State
+        const icons = ['👾', '👻', '👽', '🤖', '🎃', '💀', '💎', '🚀', '⭐', '❤️', '☀️', '🌙'];
+        let player1Name = 'PLAYER 1';
+        let player1Icon = '👾';
+        let player2Name = 'PLAYER 2';
+        let player2Icon = '👻';
+
+        let boardState = ['', '', '', '', '', '', '', '', ''];
+        let currentPlayerIcon = '👾';
+        let gameActive = true;
+        let gameMode = 'cpu'; // 'cpu' or 'player'
+
+        const winningCombinations = [
+            [0, 1, 2], [3, 4, 5], [6, 7, 8], // Rows
+            [0, 3, 6], [1, 4, 7], [2, 5, 8], // Columns
+            [0, 4, 8], [2, 4, 6]  // Diagonals
+        ];
+
+        // --- Event Listeners ---
+
+        vsCpuBtn.addEventListener('click', () => setupGame('cpu'));
+        vsPlayerBtn.addEventListener('click', () => setupGame('player'));
+
+        setupBackBtn.addEventListener('click', backToStart);
+        startGameBtn.addEventListener('click', startGame);
+
+        resetBtn.addEventListener('click', startGame);
+        mainMenuBtn.addEventListener('click', backToStart); // Was backToMenu
+
+        gameCells.forEach(cell => {
+            cell.addEventListener('click', handleCellClick);
+        });
+
+        // --- Navigation Functions ---
+
+        function backToStart() {
+            gameScreen.classList.add('hidden');
+            setupScreen.classList.add('hidden');
+            startScreen.classList.remove('hidden');
+        }
+
+        function setupGame(mode) {
+            gameMode = mode;
+
+            // Configure setup screen
+            if (gameMode === 'cpu') {
+                p2NameLabel.innerText = "CPU";
+                p2NameInput.value = "CPU";
+                p2NameInput.disabled = true;
+            } else {
+                p2NameLabel.innerText = "PLAYER 2";
+                p2NameInput.value = "";
+                p2NameInput.disabled = false;
+            }
+
+            // Populate icon selectors
+            populateIconSelectors();
+
+            startScreen.classList.add('hidden');
+            setupScreen.classList.remove('hidden');
+        }
+
+        function populateIconSelectors() {
+            p1IconSelect.innerHTML = '';
+            p2IconSelect.innerHTML = '';
+
+            icons.forEach(icon => {
+                const btn1 = createIconButton(icon, 1);
+                const btn2 = createIconButton(icon, 2);
+                p1IconSelect.appendChild(btn1);
+                p2IconSelect.appendChild(btn2);
+            });
+
+            // Set default selections
+            p1IconSelect.children[0].classList.add('selected');
+            p2IconSelect.children[1].classList.add('selected');
+            player1Icon = icons[0];
+            player2Icon = icons[1];
+            updateIconDisabledState();
+        }
+
+        function createIconButton(icon, playerNum) {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'icon-select-btn';
+            btn.dataset.icon = icon;
+            btn.innerText = icon;
+
+            btn.addEventListener('click', () => {
+                const targetSelector = (playerNum === 1) ? p1IconSelect : p2IconSelect;
+
+                // Clear previous selection
+                Array.from(targetSelector.children).forEach(child => child.classList.remove('selected'));
+
+                // Set new selection
+                btn.classList.add('selected');
+                if (playerNum === 1) {
+                    player1Icon = icon;
+                } else {
+                    player2Icon = icon;
+                }
+
+                // Update disabled states
+                updateIconDisabledState();
+            });
+            return btn;
+        }
+
+        function updateIconDisabledState() {
+            // Disable P2's icon in P1's list
+            Array.from(p1IconSelect.children).forEach(btn => {
+                btn.disabled = (btn.dataset.icon === player2Icon);
+            });
+
+            // Disable P1's icon in P2's list
+            Array.from(p2IconSelect.children).forEach(btn => {
+                btn.disabled = (btn.dataset.icon === player1Icon);
+            });
+        }
+
+
+        // --- Core Game Functions ---
+
+        function startGame() {
+            // Get player names
+            player1Name = p1NameInput.value.trim() || 'PLAYER 1';
+            player2Name = (gameMode === 'cpu') ? 'CPU' : (p2NameInput.value.trim() || 'PLAYER 2');
+
+            // Reset game state
+            boardState = ['', '', '', '', '', '', '', '', ''];
+            currentPlayerIcon = player1Icon;
+            gameActive = true;
+
+            // Reset UI
+            messageArea.innerText = `${player1Name} (${player1Icon})'S TURN`;
+            gameCells.forEach(cell => {
+                cell.innerText = '';
+                cell.classList.remove('player-1', 'player-2');
+            });
+
+            // Show game screen
+            setupScreen.classList.add('hidden');
+            gameScreen.classList.remove('hidden');
+        }
+
+        function handleCellClick(e) {
+            const clickedCell = e.target;
+            const index = parseInt(clickedCell.dataset.index);
+
+            // 1. Check if move is valid
+            if (boardState[index] !== '' || !gameActive) {
+                return;
+            }
+
+            // 2. Prevent player from clicking during CPU's turn
+            if (gameMode === 'cpu' && currentPlayerIcon === player2Icon) {
+                return;
+            }
+
+            // 3. Make the move
+            updateBoard(index, currentPlayerIcon);
+
+            // 4. Check for win
+            if (checkWin()) {
+                handleWin();
+            } else if (checkDraw()) {
+                handleDraw();
+            } else {
+                // 5. If no win/draw, change player
+                changePlayer();
+
+                // 6. If CPU mode, trigger CPU move
+                if (gameMode === 'cpu' && currentPlayerIcon === player2Icon) {
+                    gameActive = false; // Disable board while CPU "thinks"
+                    setTimeout(cpuMove, 750); // Add a small delay
+                }
+            }
+        }
+
+        function updateBoard(index, playerIcon) {
+            boardState[index] = playerIcon;
+            const cell = gameCells[index];
+            cell.innerText = playerIcon;
+            cell.classList.add(playerIcon === player1Icon ? 'player-1' : 'player-2');
+        }
+
+        function changePlayer() {
+            currentPlayerIcon = (currentPlayerIcon === player1Icon) ? player2Icon : player1Icon;
+            const currentName = (currentPlayerIcon === player1Icon) ? player1Name : player2Name;
+            messageArea.innerText = `${currentName} (${currentPlayerIcon})'S TURN`;
+        }
+
+        function checkWin() {
+            for (const combination of winningCombinations) {
+                const [a, b, c] = combination;
+                if (boardState[a] && boardState[a] === boardState[b] && boardState[a] === boardState[c]) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        function checkDraw() {
+            return !boardState.includes('');
+        }
+
+        function handleWin() {
+            const winnerName = (currentPlayerIcon === player1Icon) ? player1Name : player2Name;
+            messageArea.innerText = `${winnerName} (${currentPlayerIcon}) WINS!`;
+            gameActive = false;
+        }
+
+        function handleDraw() {
+            messageArea.innerText = "IT'S A DRAW!";
+            gameActive = false;
+        }
+
+        // --- AI (CPU) Logic ---
+
+        function cpuMove() {
+            let bestMove = -1;
+
+            // 1. Check if CPU (player2Icon) can win
+            for (let i = 0; i < 9; i++) {
+                if (boardState[i] === '') {
+                    boardState[i] = player2Icon;
+                    if (checkWin()) {
+                        bestMove = i;
+                    }
+                    boardState[i] = ''; // Undo move
+                    if (bestMove !== -1) break;
+                }
+            }
+
+            // 2. Check if Player (player1Icon) can win, and block them
+            if (bestMove === -1) {
+                for (let i = 0; i < 9; i++) {
+                    if (boardState[i] === '') {
+                        boardState[i] = player1Icon;
+                        if (checkWin()) {
+                            bestMove = i;
+                        }
+                        boardState[i] = ''; // Undo move
+                        if (bestMove !== -1) break;
+                    }
+                }
+            }
+
+            // 3. If no immediate win/block, take center
+            if (bestMove === -1 && boardState[4] === '') {
+                bestMove = 4;
+            }
+
+            // 4. If center is taken, take a random empty cell
+            if (bestMove === -1) {
+                let emptyCells = [];
+                boardState.forEach((cell, index) => {
+                    if (cell === '') emptyCells.push(index);
+                });
+                if (emptyCells.length > 0) {
+                    bestMove = emptyCells[Math.floor(Math.random() * emptyCells.length)];
+                }
+            }
+
+            // Make the CPU move
+            if (bestMove !== -1) {
+                updateBoard(bestMove, player2Icon);
+
+                if (checkWin()) {
+                    handleWin();
+                } else if (checkDraw()) {
+                    handleDraw();
+                } else {
+                    changePlayer(); // Change back to Player 1
+                }
+            }
+
+            gameActive = true; // Re-enable board
+        }
+
+        // Initial setup on load
+        populateIconSelectors(); // Populate icons once on load
+
+    </script>
+</body>
+
+</html>
