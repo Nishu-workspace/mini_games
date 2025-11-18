@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pixel Arcade</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Pixel Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+
+    <style>
+        /* Define the pixel theme class */
+        .pixel-theme {
+            font-family: 'Press Start 2P', cursive;
+            image-rendering: pixelated;
+            -ms-interpolation-mode: nearest-neighbor;
+            image-rendering: -moz-crisp-edges;
+            image-rendering: crisp-edges;
+        }
+
+        /* Base element styling */
+        body,
+        html {
+            background-color: #5C94FC;
+            /* Mario Sky Blue */
+            color: #FFFFFF;
+            /* White text */
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        /* Pixel-style container/panel */
+        .pixel-panel {
+            background-color: #D95A2B;
+            /* Brick Red */
+            border: 4px solid #592D00;
+            /* Dark Brown */
+            box-shadow: 8px 8px 0px 0px #592D00;
+            /* Dark Brown Shadow */
+            padding: 24px;
+        }
+
+        /* Pixel-style button */
+        .pixel-button {
+            font-family: 'Press Start 2P', cursive;
+            border: 4px solid #592D00;
+            /* Dark Brown */
+            background-color: #8C542A;
+            /* Used Block Brown */
+            color: #FFFFFF;
+            padding: 12px 16px;
+            text-align: center;
+            cursor: pointer;
+            box-shadow: 4px 4px 0px 0px #592D00;
+            /* Dark Brown */
+            transition: all 0.05s ease-in-out;
+            text-shadow: none;
+        }
+
+        .pixel-button:hover {
+            background-color: #B56D38;
+            /* Lighter Brown */
+        }
+
+        .pixel-button:active {
+            box-shadow: none;
+            transform: translate(4px, 4px);
+        }
+
+        /* Specific button colors */
+        .pixel-button-primary {
+            background-color: #FBC02D;
+            /* Question Block Yellow */
+            color: #592D00;
+            /* Dark Brown Text */
+            border-color: #592D00;
+            box-shadow: 4px 4px 0px 0px #592D00;
+        }
+
+        .pixel-button-primary:hover {
+            background-color: #FFD54F;
+        }
+
+        .pixel-button-secondary {
+            background-color: #21B000;
+            /* Pipe Green */
+            color: #FFFFFF;
+            border-color: #0A6C00;
+            box-shadow: 4px 4px 0px 0px #0A6C00;
+        }
+
+        .pixel-button-secondary:hover {
+            background-color: #2DD000;
+        }
+
+        .pixel-button-tertiary {
+            background-color: #E52521;
+            /* Mario Red */
+            color: #FFFFFF;
+            border-color: #9F0F0C;
+            box-shadow: 4px 4px 0px 0px #9F0F0C;
+        }
+
+        .pixel-button-tertiary:hover {
+            background-color: #FF3B36;
+        }
+
+        .pixel-button-reset {
+            background-color: #FFB6C1;
+            /* Light Pink/Red */
+        }
+
+        .pixel-button-reset:hover {
+            background-color: #FFA0B0;
+        }
+
+        /* --- NEW STYLES --- */
+
+        /* Navigation */
+        nav {
+            padding: 16px 24px;
+            /* Slimmer padding for nav */
+        }
+
+        nav a {
+            transition: color 0.1s;
+        }
+
+        nav a:hover {
+            color: #FBC02D;
+            /* Question Block Yellow */
+        }
+
+        /* Game List */
+        .game-list-item {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 16px;
+            padding: 20px 0;
+            border-bottom: 4px solid #8C542A;
+            /* Used Block Brown */
+        }
+
+        @media (min-width: 768px) {
+
+            /* md breakpoint */
+            .game-list-item {
+                flex-direction: row;
+                align-items: center;
+                justify-content: space-between;
+            }
+        }
+
+        .game-list-item:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+        .game-list-item:first-child {
+            padding-top: 0;
+        }
+
+        .game-icon {
+            width: 48px;
+            height: 48px;
+            border: 4px solid #000;
+            background-color: #21B000;
+            /* Pipe Green */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            /* Prevent icon from shrinking */
+            border-top-width: 8px;
+            /* Pipe Rim */
+            box-shadow: 4px 4px 0 0 #0A6C00;
+        }
+
+        .game-icon svg {
+            width: 28px;
+            height: 28px;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 50;
+        }
+
+        .modal-content {
+            position: relative;
+            width: 90%;
+            max-width: 400px;
+        }
+
+        .pixel-close-btn {
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            width: 36px;
+            height: 36px;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 20px;
+            line-height: 32px;
+            background-color: #E52521;
+            /* Mario Red */
+            border: 4px solid #000;
+            color: #000;
+            box-shadow: 4px 4px 0px 0px rgba(0, 0, 0, 1);
+            cursor: pointer;
+        }
+
+        .pixel-close-btn:active {
+            box-shadow: none;
+            transform: translate(4px, 4px);
+        }
+
+        /* --- MARIO CLOUD STYLES --- */
+        .cloud-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            z-index: 0;
+        }
+
+        .pixel-cloud {
+            position: absolute;
+            background: #FFFFFF;
+            border: 4px solid #000;
+            box-shadow: 4px 4px 0 #000;
+        }
+
+        /* Cloud 1 (Big) */
+        .cloud-1 {
+            width: 100px;
+            height: 32px;
+            top: 30%;
+            left: 15%;
+        }
+
+        .cloud-1::before {
+            content: '';
+            position: absolute;
+            background: #FFFFFF;
+            border: 4px solid #000;
+            width: 48px;
+            height: 48px;
+            top: -24px;
+            left: 24px;
+            box-shadow: 4px 4px 0 #000;
+        }
+
+        /* Cloud 2 (Small) */
+        .cloud-2 {
+            width: 64px;
+            height: 24px;
+            top: 20%;
+            right: 10%;
+        }
+
+        .cloud-2::before {
+            content: '';
+            position: absolute;
+            background: #FFFFFF;
+            border: 4px solid #000;
+            width: 32px;
+            height: 32px;
+            top: -16px;
+            left: 16px;
+            box-shadow: 4px 4px 0 #000;
+        }
+
+        /* Cloud 3 (Bottom) */
+        .cloud-3 {
+            width: 80px;
+            height: 24px;
+            bottom: 15%;
+            right: 25%;
+        }
+
+        /* Hide utility */
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+
+<body class="pixel-theme w-full flex flex-col items-center p-4 py-10">
+
+    <!-- Navigation Bar -->
+    <nav class="pixel-panel w-full max-w-5xl flex items-center justify-between">
+        <h1 class="text-xl md:text-2xl">PIXEL ARCADE</h1>
+        <div class="hidden md:flex items-center space-x-6 text-sm">
+            <a href="#">HOME</a>
+            <a href="#">NEW GAMES</a>
+            <a href="#">HIGH SCORES</a>
+            <a href="#">ABOUT</a>
+        </div>
+    </nav>
+
+    <!-- Main Content Area -->
+    <main class="w-full max-w-5xl mt-10 space-y-10">
+
+        <!-- Hero Section -->
+        <section class="text-center relative" style="padding: 60px 24px;">
+            <!-- Cloud background elements -->
+            <div class="cloud-container">
+                <div class="pixel-cloud cloud-1"></div>
+                <div class="pixel-cloud cloud-2"></div>
+                <div class="pixel-cloud cloud-3"></div>
+            </div>
+
+            <!-- Hero Text (on top) -->
+            <div class="relative z-10">
+                <h2 class="text-3xl md:text-5xl" style="text-shadow: 4px 4px 0 #000;">WELCOME!</h2>
+                <p class="text-lg text-white mt-4 leading-relaxed">YOUR 8-BIT ESCAPE. <br>ALL GAMES. ALL PIXELS. ALL THE
+                    TIME.</p>
+                <button class="pixel-button pixel-button-primary text-sm mt-8"
+                    onclick="document.getElementById('game-library').scrollIntoView({ behavior: 'smooth' });">
+                    BROWSE GAMES
+                </button>
+            </div>
+        </section>
+
+        <!-- Game Library Section -->
+        <section id="game-library" class="pixel-panel">
+            <h2 class="text-3xl text-center mb-6">GAME LIBRARY</h2>
+
+            <div class="space-y-4">
+
+                <!-- Game 1: Tic Tac Toe -->
+                <div class="game-list-item">
+                    <div class="flex items-center gap-4">
+                        <div class="game-icon" style="color: #FFFFFF;">
+                            <!-- Ghost Icon -->
+                            <svg viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                                <path
+                                    d="M4 4h8v6H9v1H7v-1H4V4zM5 5v1h1V5H5zm5 0v1h1V5h-1zM4 11h1v1H4v-1zm1 1h1v1H5v-1zm1 1h1v1H6v-1zm1 1h1v1H7v-1zm1 1h1v1H8v-1zm1 1h1v1H9v-1zm1 1h1v1h-1v-1zm1-1h1v1h-1v-1z" />
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="text-xl">TIC TAC TOE</h3>
+                            <p class="text-sm text-gray-200 mt-1">CLASSIC 3-IN-A-ROW. VS PLAYER OR CPU.</p>
+                        </div>
+                    </div>
+                    <button class="pixel-button pixel-button-secondary text-sm w-full md:w-auto"
+                        onclick="showModal('TIC TAC TOE')">PLAY</button>
+                </div>
+
+                <!-- Game 2: Pixel Pong -->
+                <div class="game-list-item">
+                    <div class="flex items-center gap-4">
+                        <div class="game-icon" style="color: #FFFFFF;">
+                            <!-- Pong Icon -->
+                            <svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="currentColor">
+                                <rect x="2" y="5" width="2" height="6" />
+                                <rect x="12" y="3" width="2" height="6" />
+                                <rect x="7" y="7" width="2" height="2" />
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="text-xl">PIXEL PONG</h3>
+                            <p class="text-sm text-gray-200 mt-1">THE ORIGINAL PADDLE BATTLE. LIVES OR SCORE.</p>
+                        </div>
+                    </div>
+                    <button class="pixel-button pixel-button-primary text-sm w-full md:w-auto"
+                        onclick="showModal('PIXEL PONG')">PLAY</button>
+                </div>
+
+                <!-- Game 3: Pixel Match -->
+                <div class="game-list-item">
+                    <div class="flex items-center gap-4">
+                        <div class="game-icon" style="color: #FFFFFF;">
+                            <!-- Star Icon -->
+                            <svg viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                                <path
+                                    d="M7 2h2v1H7V2zM6 3h4v1H6V3zM5 4h6v1H5V4zM3 5h2v1H3V5zm8 0h2v1h-2V5zM2 6h2v1H2V6zm8 0h2v1h-2V6zM1 7h2v1H1V7zm2 0h8v1H3V7zm8 0h2v1h-2V7zM3 8h2v1H3V8zm6 0h2v1H9V8zM4 9h2v1H4V9zm4 0h2v1H8V9zM5 10h1v1H5v-1zm4 0h1v1H9v-1zM6 11h1v1H6v-1zm2 0h1v1H8v-1z" />
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="text-xl">PIXEL MATCH</h3>
+                            <p class="text-sm text-gray-200 mt-1">TEST YOUR 8-BIT MEMORY. SOLO OR VS.</p>
+                        </div>
+                    </div>
+                    <button class="pixel-button pixel-button-tertiary text-sm w-full md:w-auto"
+                        onclick="showModal('PIXEL MATCH')">PLAY</button>
+                </div>
+
+                <!-- Add more games here... -->
+
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="text-center mt-2 pb-6 text-xs text-white">
+            (C) 2025 Sociials Game
+        </footer>
+    </main>
+
+    <!-- Modal for launching games -->
+    <div id="game-modal" class="modal-overlay hidden">
+        <div class="modal-content pixel-panel text-center">
+            <button id="modal-close-btn" class="pixel-close-btn">&times;</button>
+            <h2 id="modal-text" class="text-2xl">LOADING...</h2>
+        </div>
+    </div>
+
+    <script>
+        const modal = document.getElementById('game-modal');
+        const modalText = document.getElementById('modal-text');
+        const modalCloseBtn = document.getElementById('modal-close-btn');
+
+        function showModal(gameName) {
+            // 1. Create a map of game names to their folder paths
+            const gamePaths = {
+                'TIC TAC TOE': './tic-tac-toe/',
+                'PIXEL PONG': './ping-pong/',
+                'PIXEL MATCH': './card-swap/'
+                // Add new games here, e.g.:
+                // 'NEW GAME': './new-game-folder/'
+            };
+
+            const path = gamePaths[gameName];
+
+            if (path) {
+                // Show the loading modal
+                modalText.innerText = `LOADING\n${gameName}...`;
+                modal.classList.remove('hidden');
+
+                // Wait for 1 second, then navigate
+                setTimeout(() => {
+                    // We assume the main file is index.html
+                    // Change 'index.html' if your game files have different names
+                    window.location.href = path + 'index.html';
+                }, 1000); // 1-second delay to see the "LOADING"
+            } else {
+                // Fallback for a game not in the map
+                modalText.innerText = `ERROR:\n${gameName}\nNOT FOUND!`;
+                modal.classList.remove('hidden');
+            }
+        }
+
+        modalCloseBtn.addEventListener('click', () => {
+            modal.classList.add('hidden');
+        });
+    </script>
+</body>
+
+</html>
