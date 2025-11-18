@@ -1,0 +1,815 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Pixel Pong — Overworld → Underground</title>
+
+    <!-- Google Pixel Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+
+    <style>
+        /* ===========================
+       Styles — Overworld landing + Underground game
+       =========================== */
+
+        :root {
+            --over-sky: #a8e0ff;
+            --over-cloud: #ffffff;
+            --hill: #60c654;
+            --hill-dark: #3da33a;
+            --panel: #0d1220;
+            --underground-bg: #07060b;
+            --brick: #2e2a2a;
+            --accent-red: #ff4a4a;
+            --accent-blue: #3b7bff;
+            --accent-yellow: #ffd166;
+            --ui-bg: rgba(6, 7, 10, 0.85);
+            --muted: #b9c0c9;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0
+        }
+
+        html,
+        body {
+            height: 100%
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(180deg, #07102a 0%, #0c1220 100%);
+            font-family: 'Press Start 2P', monospace;
+            color: var(--muted);
+            padding: 20px;
+        }
+
+        .app {
+            width: 100%;
+            max-width: 980px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            align-items: center;
+        }
+
+        /* HERO (Overworld) */
+        .hero {
+            width: 100%;
+            background: linear-gradient(180deg, var(--over-sky) 0%, #7fd2ff 60%, #6fc8ff 100%);
+            border-radius: 14px;
+            padding: 16px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.02);
+            display: flex;
+            gap: 12px;
+            align-items: stretch;
+        }
+
+        .hero-left {
+            width: 45%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .over-scene {
+            width: 240px;
+            height: 140px;
+            background: linear-gradient(180deg, #bff0ff 0%, #93e0ff 100%);
+            border-radius: 10px;
+            position: relative;
+            box-shadow: inset 0 -8px 18px rgba(0, 0, 0, 0.12);
+            image-rendering: pixelated;
+            overflow: hidden;
+        }
+
+        /* pixel hills */
+        .hill {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 60px;
+            background: linear-gradient(180deg, var(--hill) 0%, var(--hill-dark) 100%);
+            transform: scaleY(1);
+            border-top-left-radius: 40px;
+            border-top-right-radius: 80px;
+        }
+
+        .cloud {
+            position: absolute;
+            top: 18px;
+            left: 24px;
+            width: 90px;
+            height: 30px;
+            background: var(--over-cloud);
+            border-radius: 20px;
+            filter: drop-shadow(0 4px 4px rgba(0, 0, 0, 0.08));
+            opacity: 0.95;
+        }
+
+        .cloud.small {
+            width: 60px;
+            height: 20px;
+            top: 8px;
+            left: 140px;
+            opacity: 0.9;
+        }
+
+        .hero-right {
+            width: 55%;
+            padding: 4px 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            justify-content: center;
+        }
+
+        .title {
+            color: var(--brick);
+            font-size: 18px;
+            letter-spacing: 1px;
+        }
+
+        .subtitle {
+            color: #1b2430;
+            font-size: 11px;
+            margin-bottom: 8px;
+        }
+
+        .row {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .label {
+            min-width: 120px;
+            font-size: 10px;
+            color: #0b1620;
+        }
+
+        /* Select & input: make them readable (dark bg, colored text) */
+        select,
+        input[type=number] {
+            background: #0b1220;
+            color: var(--accent-yellow);
+            border: 2px solid rgba(255, 255, 255, 0.03);
+            padding: 8px 10px;
+            border-radius: 8px;
+            font-family: 'Press Start 2P', monospace;
+            font-size: 11px;
+            outline: none;
+        }
+
+        select:focus,
+        input:focus {
+            box-shadow: 0 8px 22px rgba(0, 0, 0, 0.5);
+        }
+
+        .btn {
+            background: linear-gradient(180deg, var(--accent-red), #d43b3b);
+            border: none;
+            color: #fff;
+            padding: 12px 14px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .btn.secondary {
+            background: linear-gradient(180deg, #222833, #0f1622);
+            border: 1px solid rgba(255, 255, 255, 0.03);
+            color: var(--muted);
+        }
+
+        .small {
+            font-size: 10px;
+            color: #0b1620
+        }
+
+        /* GAME FRAME (Underground) */
+        .game-frame {
+            width: 100%;
+            aspect-ratio: 16/9;
+            max-width: 900px;
+            background: var(--underground-bg);
+            border-radius: 12px;
+            padding: 12px;
+            position: relative;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
+            display: none;
+            overflow: hidden;
+        }
+
+        /* underground bricks as background texture */
+        .underground-tiles {
+            position: absolute;
+            inset: 0;
+            z-index: 0;
+            background-image: linear-gradient(0deg, rgba(255, 255, 255, 0.01) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+            background-size: 40px 40px, 40px 40px;
+            opacity: 0.18;
+            pointer-events: none;
+        }
+
+        canvas {
+            width: 100%;
+            height: 100%;
+            image-rendering: pixelated;
+            border-radius: 8px;
+            display: block;
+            z-index: 1;
+        }
+
+        .hud {
+            position: absolute;
+            inset: 12px;
+            display: flex;
+            justify-content: space-between;
+            pointer-events: none;
+            z-index: 2;
+        }
+
+        .score {
+            background: rgba(0, 0, 0, 0.45);
+            padding: 8px 12px;
+            border-radius: 8px;
+            color: var(--accent-yellow);
+            font-size: 12px;
+            pointer-events: none;
+        }
+
+        .overlay {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 3;
+            pointer-events: none;
+        }
+
+        .overlay-card {
+            pointer-events: auto;
+            background: var(--ui-bg);
+            padding: 12px 14px;
+            border-radius: 10px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            color: var(--muted);
+        }
+
+        .overlay-card .big {
+            font-size: 12px;
+            color: var(--accent-yellow);
+            margin-bottom: 8px;
+        }
+
+        .footer {
+            color: var(--muted);
+            font-size: 10px;
+            width: 100%;
+            max-width: 900px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        @media (max-width:880px) {
+            .hero {
+                flex-direction: column;
+            }
+
+            .hero-left,
+            .hero-right {
+                width: 100%
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="app">
+
+        <!-- HERO - Overworld -->
+        <section class="hero" id="hero">
+            <div class="hero-left">
+                <div class="over-scene" aria-hidden="true">
+                    <div class="cloud"></div>
+                    <div class="cloud small"></div>
+                    <div class="hill"></div>
+                </div>
+            </div>
+
+            <div class="hero-right">
+                <div>
+                    <div class="title">PIXEL PONG — OVERWORLD</div>
+                    <div class="subtitle">Landing: choose mode, win condition & sound</div>
+                </div>
+
+                <div class="row">
+                    <div class="label">Mode</div>
+                    <select id="mode">
+                        <option value="pvc">Player vs PC (AI)</option>
+                        <option value="pvp">Player vs Player (Local)</option>
+                    </select>
+                </div>
+
+                <div class="row" id="aiRow">
+                    <div class="label">AI Difficulty</div>
+                    <select id="aiDifficulty">
+                        <option value="0.6">Easy</option>
+                        <option value="0.8" selected>Normal</option>
+                        <option value="0.95">Hard</option>
+                    </select>
+
+                    <div class="label" style="min-width:96px">AI Reaction</div>
+                    <select id="aiReaction">
+                        <option value="0.06">Slow</option>
+                        <option value="0.12" selected>Normal</option>
+                        <option value="0.22">Quick</option>
+                    </select>
+                </div>
+
+                <div class="row">
+                    <div class="label">Win Condition</div>
+                    <select id="winMode">
+                        <option value="points" selected>Points (first to X)</option>
+                        <option value="lives">Lives (lose all lives)</option>
+                    </select>
+                    <input id="winVal" type="number" min="1" value="7" style="width:100px" />
+                </div>
+
+                <div class="row">
+                    <div class="label">Sound</div>
+                    <select id="sound">
+                        <option value="true" selected>On</option>
+                        <option value="false">Off</option>
+                    </select>
+
+                    <div style="flex:1"></div>
+                    <button class="btn" id="startBtn">Start Game</button>
+                    <button class="btn secondary" id="quickBtn">Quick Play</button>
+                </div>
+
+                <div class="row small">Controls: Left - W / S • Right - ↑ / ↓ • Space to pause / serve • P to toggle
+                    mode</div>
+            </div>
+        </section>
+
+        <!-- GAME FRAME - Underground -->
+        <section class="game-frame" id="gameFrame" aria-hidden="true">
+            <div class="underground-tiles"></div>
+            <canvas id="canvas" width="640" height="360"></canvas>
+
+            <div class="hud">
+                <div class="score" id="leftHUD">0</div>
+                <div class="score" id="rightHUD">0</div>
+            </div>
+
+            <div class="overlay" id="gameOverlay">
+                <div class="overlay-card" id="overlayCard" style="display:block; pointer-events:auto;">
+                    <div class="big" id="overlayTitle">Press Space to Start</div>
+                    <div style="display:flex;gap:8px;justify-content:center;margin-top:8px">
+                        <button class="btn secondary" id="backBtn">Back</button>
+                        <button class="btn" id="serveBtn">Start</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <div class="footer">
+            <div>Theme: Overworld (landing) → Underground (game)</div>
+            <div>Save as single file & open in browser</div>
+        </div>
+    </div>
+
+    <script>
+        /* ===========================
+           Script — Pixel Pong Overworld→Underground
+           =========================== */
+
+        /* ---------- Config ---------- */
+        const VW = 640, VH = 360;
+        const CONFIG = {
+            paddle: { w: 10, h: 60, speed: 260 }, // px/s
+            ball: { size: 10, speed: 320, accel: 1.04, maxSpeed: 1200 },
+            colors: {
+                bg: '#07060b',
+                left: '#ff4a4a',
+                right: '#3b7bff',
+                ball: '#ffd166',
+                center: '#3b3b3b'
+            }
+        };
+
+        /* ---------- DOM ---------- */
+        const hero = document.getElementById('hero');
+        const gameFrame = document.getElementById('gameFrame');
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d', { alpha: false });
+        canvas.width = VW; canvas.height = VH;
+
+        const modeSel = document.getElementById('mode');
+        const aiDiffSel = document.getElementById('aiDifficulty');
+        const aiReactSel = document.getElementById('aiReaction');
+        const winModeSel = document.getElementById('winMode');
+        const winValInput = document.getElementById('winVal');
+        const soundSel = document.getElementById('sound');
+        const startBtn = document.getElementById('startBtn');
+        const quickBtn = document.getElementById('quickBtn');
+
+        const aiRow = document.getElementById('aiRow');
+
+        const leftHUD = document.getElementById('leftHUD');
+        const rightHUD = document.getElementById('rightHUD');
+
+        const overlayCard = document.getElementById('overlayCard');
+        const overlayTitle = document.getElementById('overlayTitle');
+        const backBtn = document.getElementById('backBtn');
+        const serveBtn = document.getElementById('serveBtn');
+
+        /* ---------- Game State ---------- */
+        let STATE = {
+            running: false,
+            singlePlayer: true,
+            winMode: 'points',
+            winValue: 7,
+            leftScore: 0,
+            rightScore: 0,
+            leftLives: 3,
+            rightLives: 3,
+            soundOn: true,
+            ai: { difficulty: 0.8, reaction: 0.12 }
+        };
+
+        /* Game Objects */
+        const player = { x: 12, y: (VH - 60) / 2, w: CONFIG.paddle.w, h: CONFIG.paddle.h };
+        const opponent = { x: VW - 22, y: (VH - 60) / 2, w: CONFIG.paddle.w, h: CONFIG.paddle.h };
+        const ball = { x: (VW - 10) / 2, y: (VH - 10) / 2, size: CONFIG.ball.size, vx: 0, vy: 0, speed: CONFIG.ball.speed };
+
+        /* Input */
+        const keys = { w: false, s: false, up: false, down: false };
+
+        /* Timing */
+        let lastTime = performance.now();
+
+        /* Audio */
+        let audioCtx = null;
+        function initAudio() { if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+        function beep(freq = 700, time = 0.06, type = 'square') {
+            if (!STATE.soundOn) return; initAudio(); if (!audioCtx) return;
+            const o = audioCtx.createOscillator(); const g = audioCtx.createGain();
+            o.type = type; o.frequency.value = freq; o.connect(g); g.connect(audioCtx.destination);
+            const now = audioCtx.currentTime; g.gain.setValueAtTime(0.0001, now);
+            g.gain.linearRampToValueAtTime(0.16, now + 0.004); o.start(now);
+            g.gain.exponentialRampToValueAtTime(0.0001, now + time); o.stop(now + time + 0.02);
+        }
+
+        /* ---------- Utilities ---------- */
+        function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
+        function randSign() { return Math.random() < 0.5 ? -1 : 1; }
+
+        function rectIntersect(a, b) {
+            return !(a.x > b.x + b.w || a.x + a.w < b.x || a.y > b.y + b.h || a.y + a.h < b.y);
+        }
+
+        /* ---------- Setup UI ---------- */
+        function showAIControls(show) { aiRow.style.display = show ? 'flex' : 'none'; }
+        modeSel.addEventListener('change', () => { const sp = modeSel.value === 'pvc'; showAIControls(sp); });
+        showAIControls(true);
+
+        startBtn.addEventListener('click', () => startFromLanding());
+        quickBtn.addEventListener('click', () => {
+            modeSel.value = 'pvc'; aiDiffSel.value = '0.8'; aiReactSel.value = '0.12'; winModeSel.value = 'points'; winValInput.value = 5; soundSel.value = 'true';
+            startFromLanding();
+        });
+
+        backBtn.addEventListener('click', () => {
+            // end game and return to landing
+            STATE.running = false;
+            gameFrame.style.display = 'none';
+            hero.style.display = 'flex';
+            overlayCard.style.display = 'block';
+            setOverlayText('Press Space to Start');
+        });
+
+        serveBtn.addEventListener('click', () => {
+            if (!STATE.running) startGame();
+        });
+
+        /* ---------- Game init / reset ---------- */
+        function initMatchFromUI() {
+            STATE.singlePlayer = (modeSel.value === 'pvc');
+            STATE.winMode = winModeSel.value;
+            STATE.winValue = Math.max(1, parseInt(winValInput.value) || 7);
+            STATE.soundOn = (soundSel.value === 'true');
+            STATE.ai.difficulty = parseFloat(aiDiffSel.value);
+            STATE.ai.reaction = parseFloat(aiReactSel.value);
+
+            // initialize scores / lives accordingly (lives persist during play)
+            STATE.leftScore = 0; STATE.rightScore = 0;
+            if (STATE.winMode === 'lives') {
+                // use winValue as starting lives
+                STATE.leftLives = STATE.winValue;
+                STATE.rightLives = STATE.winValue;
+            } else {
+                STATE.leftLives = 3; STATE.rightLives = 3; // fallback
+            }
+
+            updateHUD();
+            resetBall();
+        }
+
+        function resetBall(serveLeft = null) {
+            ball.x = (VW - ball.size) / 2;
+            ball.y = (VH - ball.size) / 2;
+            ball.speed = CONFIG.ball.speed;
+            const dir = serveLeft === null ? randSign() : (serveLeft ? -1 : 1);
+            const angle = (Math.random() * 0.8 - 0.4);
+            ball.vx = Math.cos(angle) * ball.speed * dir;
+            ball.vy = Math.sin(angle) * ball.speed;
+        }
+
+        function updateHUD() {
+            if (STATE.winMode === 'points') {
+                leftHUD.textContent = STATE.leftScore ?? 0;
+                rightHUD.textContent = STATE.rightScore ?? 0;
+            } else {
+                leftHUD.textContent = (STATE.leftLives ?? 0) + '❤';
+                rightHUD.textContent = (STATE.rightLives ?? 0) + '❤';
+            }
+        }
+
+        /* ---------- Input ---------- */
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'w' || e.key === 'W') keys.w = true;
+            if (e.key === 's' || e.key === 'S') keys.s = true;
+            if (e.key === 'ArrowUp') keys.up = true;
+            if (e.key === 'ArrowDown') keys.down = true;
+
+            if (e.code === 'Space') {
+                e.preventDefault();
+                if (!STATE.running) {
+                    // if overlay showed "point" or "winner" - start/resume
+                    startGame();
+                } else {
+                    // pause
+                    STATE.running = false; setOverlayText('Paused — Press Space to Resume'); overlayCard.style.display = 'block';
+                }
+            }
+
+            if (e.key.toLowerCase() === 'p') {
+                // toggle PvP/PvAI quickly
+                STATE.singlePlayer = !STATE.singlePlayer;
+                modeSel.value = STATE.singlePlayer ? 'pvc' : 'pvp';
+                showAIControls(STATE.singlePlayer);
+                setOverlayText('Mode: ' + (STATE.singlePlayer ? 'PvAI' : 'PvP'));
+                setTimeout(() => { if (!STATE.running) setOverlayText('Press Space to Start'); }, 700);
+            }
+
+            if (e.key.toLowerCase() === 'm') {
+                STATE.soundOn = !STATE.soundOn;
+                setOverlayText('Sound ' + (STATE.soundOn ? 'On' : 'Off'));
+                setTimeout(() => { if (!STATE.running) setOverlayText('Press Space to Start'); }, 700);
+            }
+        });
+
+        window.addEventListener('keyup', (e) => {
+            if (e.key === 'w' || e.key === 'W') keys.w = false;
+            if (e.key === 's' || e.key === 'S') keys.s = false;
+            if (e.key === 'ArrowUp') keys.up = false;
+            if (e.key === 'ArrowDown') keys.down = false;
+        });
+
+        /* ---------- Start from landing ---------- */
+        function startFromLanding() {
+            hero.style.display = 'none';
+            gameFrame.style.display = 'block';
+            initMatchFromUI();
+            overlayCard.style.display = 'block';
+            setOverlayText('Press Space to Start');
+        }
+
+        /* ---------- Start game ---------- */
+        function startGame() {
+            if (!STATE.running) {
+                STATE.running = true;
+                overlayCard.style.display = 'none';
+                lastTime = performance.now();
+                requestAnimationFrame(loop);
+                beep(880, 0.06);
+            }
+        }
+
+        /* ---------- Game loop ---------- */
+        function loop(now) {
+            if (!STATE.running) return;
+            const dt = Math.min(0.033, (now - lastTime) / 1000);
+            lastTime = now;
+
+            update(dt);
+            render();
+
+            requestAnimationFrame(loop);
+        }
+
+        /* ---------- Update ---------- */
+        function update(dt) {
+            // player movement
+            let pm = 0;
+            if (keys.w) pm -= 1; if (keys.s) pm += 1;
+            player.y += pm * CONFIG.paddle.speed * dt;
+            player.y = clamp(player.y, 0, VH - player.h);
+
+            // opponent movement (AI or second player)
+            if (STATE.singlePlayer) {
+                const target = ball.y + ball.size / 2 - opponent.h / 2;
+                const lerp = clamp(STATE.ai.reaction * (1 + (1 - STATE.ai.difficulty)), 0.02, 0.98);
+                opponent.y += (target - opponent.y) * lerp;
+                opponent.y = clamp(opponent.y, 0, VH - opponent.h);
+            } else {
+                let om = 0;
+                if (keys.up) om -= 1; if (keys.down) om += 1;
+                opponent.y += om * CONFIG.paddle.speed * dt;
+                opponent.y = clamp(opponent.y, 0, VH - opponent.h);
+            }
+
+            // ball physics
+            ball.x += ball.vx * dt;
+            ball.y += ball.vy * dt;
+
+            // walls
+            if (ball.y <= 0) { ball.y = 0; ball.vy = -ball.vy; beep(720, 0.03); }
+            if (ball.y + ball.size >= VH) { ball.y = VH - ball.size; ball.vy = -ball.vy; beep(720, 0.03); }
+
+            // collisions with paddles
+            const ballRect = { x: ball.x, y: ball.y, w: ball.size, h: ball.size };
+            const leftRect = { x: player.x, y: player.y, w: player.w, h: player.h };
+            const rightRect = { x: opponent.x, y: opponent.y, w: opponent.w, h: opponent.h };
+
+            if (rectIntersect(ballRect, leftRect) && ball.vx < 0) {
+                ball.x = player.x + player.w;
+                const rel = (player.y + player.h / 2) - (ball.y + ball.size / 2);
+                const norm = rel / (player.h / 2);
+                const angle = norm * (Math.PI / 3);
+                const speed = clamp(Math.hypot(ball.vx, ball.vy) * CONFIG.ball.accel, 0, CONFIG.ball.maxSpeed);
+                ball.vx = Math.cos(angle) * speed * 1;
+                ball.vy = -Math.sin(angle) * speed;
+                beep(1050, 0.04, 'square');
+            }
+
+            if (rectIntersect(ballRect, rightRect) && ball.vx > 0) {
+                ball.x = opponent.x - ball.size;
+                const rel = (opponent.y + opponent.h / 2) - (ball.y + ball.size / 2);
+                const norm = rel / (opponent.h / 2);
+                const angle = norm * (Math.PI / 3);
+                const speed = clamp(Math.hypot(ball.vx, ball.vy) * CONFIG.ball.accel, 0, CONFIG.ball.maxSpeed);
+                ball.vx = Math.cos(angle) * speed * -1;
+                ball.vy = -Math.sin(angle) * speed;
+                beep(880, 0.04, 'square');
+            }
+
+            // left miss
+            if (ball.x + ball.size < 0) {
+                // scoring or lives
+                if (STATE.winMode === 'points') {
+                    STATE.rightScore = (STATE.rightScore || 0) + 1;
+                } else { // lives
+                    STATE.leftLives = (STATE.leftLives || 0) - 1;
+                }
+                handlePoint(false); // serve to right
+            }
+
+            // right miss
+            if (ball.x > VW) {
+                if (STATE.winMode === 'points') {
+                    STATE.leftScore = (STATE.leftScore || 0) + 1;
+                } else {
+                    STATE.rightLives = (STATE.rightLives || 0) - 1;
+                }
+                handlePoint(true); // serve to left
+            }
+
+            updateHUD();
+
+            // check winners
+            if (STATE.winMode === 'points') {
+                if ((STATE.leftScore || 0) >= STATE.winValue) return handleWin('Left Player Wins!');
+                if ((STATE.rightScore || 0) >= STATE.winValue) return handleWin('Right Player Wins!');
+            } else {
+                if ((STATE.leftLives || 0) <= 0) return handleWin('Right Player Wins!');
+                if ((STATE.rightLives || 0) <= 0) return handleWin('Left Player Wins!');
+            }
+        }
+
+        function handlePoint(serveLeft) {
+            // DO NOT reset lives in lives mode — only ball resets
+            STATE.running = false;
+            setOverlayText('Point! Press Space to Continue');
+            resetBall(serveLeft);
+            beep(360, 0.14);
+        }
+
+        function handleWin(text) {
+            STATE.running = false;
+            overlayCard.style.display = 'block';
+            setOverlayText(text + '<br>Play Again?');
+            // show Play Again and Back buttons via overlay (serveBtn used)
+            // clicking Back returns to landing (backBtn)
+            // pressing Space restarts match (re-init)
+            // we store winner for clarity if needed
+            // attach one-time restart on Space
+            window.addEventListener('keydown', restartOnSpaceOnce);
+        }
+
+        function restartOnSpaceOnce(e) {
+            if (e.code === 'Space') {
+                e.preventDefault();
+                window.removeEventListener('keydown', restartOnSpaceOnce);
+                // start a fresh match with same UI settings
+                initMatchFromUI();
+                updateHUD();
+                startGame();
+            }
+        }
+
+        /* ---------- Render ---------- */
+        function drawCenterLine() {
+            const seg = 12, gap = 10;
+            ctx.fillStyle = CONFIG.colors.center;
+            for (let y = 0; y < VH; y += seg + gap) ctx.fillRect((VW / 2) - 2, y, 4, seg);
+        }
+
+        function render() {
+            // underground bg
+            ctx.fillStyle = CONFIG.colors.bg;
+            ctx.fillRect(0, 0, VW, VH);
+
+            // center dotted line
+            drawCenterLine();
+
+            // paddles & ball
+            ctx.fillStyle = CONFIG.colors.left;
+            ctx.fillRect(Math.round(player.x), Math.round(player.y), player.w, player.h);
+
+            ctx.fillStyle = CONFIG.colors.right;
+            ctx.fillRect(Math.round(opponent.x), Math.round(opponent.y), opponent.w, opponent.h);
+
+            ctx.fillStyle = CONFIG.colors.ball;
+            ctx.fillRect(Math.round(ball.x), Math.round(ball.y), ball.size, ball.size);
+        }
+
+        /* ---------- Overlay helpers ---------- */
+        function setOverlayText(html) {
+            overlayTitle.innerHTML = html;
+            overlayCard.style.display = 'block';
+            overlayCard.parentElement.style.pointerEvents = 'auto';
+        }
+
+        function clearOverlay() {
+            overlayCard.style.display = 'none';
+            overlayCard.parentElement.style.pointerEvents = 'none';
+        }
+
+        /* ---------- Utility ---------- */
+        function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
+
+        /* ---------- Start-up ---------- */
+        // initial UI values synced
+        winModeSel.addEventListener('change', () => {
+            if (winModeSel.value === 'lives') {
+                winValInput.value = Math.max(1, parseInt(winValInput.value) || 3);
+            } else {
+                winValInput.value = Math.max(1, parseInt(winValInput.value) || 7);
+            }
+        });
+
+        // prevent space from scrolling
+        window.addEventListener('keydown', (e) => { if (e.code === 'Space') e.preventDefault(); });
+
+        // initial HUD & overlay
+        updateHUD();
+        setOverlayText('Press Space to Start');
+
+        /* Expose tiny API to console */
+        window.PONG = {
+            start: startGame,
+            hero: () => { hero.style.display = 'flex'; gameFrame.style.display = 'none'; },
+            setAI(d, r) { aiDiffSel.value = d; aiReactSel.value = r; }
+        };
+    </script>
+</body>
+
+</html>
