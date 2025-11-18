@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pixel Match</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Pixel Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+
+    <!-- Tone.js for sound effects -->
+<script src="https://cdn.jsdelivr.net/npm/tone@14.7.77/build/Tone.min.js"></script>
+
+
+    <style>
+        /* Define the pixel theme class */
+        .pixel-theme {
+            font-family: 'Press Start 2P', cursive;
+            image-rendering: pixelated;
+            -ms-interpolation-mode: nearest-neighbor;
+            image-rendering: -moz-crisp-edges;
+            image-rendering: crisp-edges;
+        }
+
+        /* Base element styling */
+        body,
+        html {
+            background-color: #303030;
+            /* Dark retro gray */
+            color: #E0E0E0;
+            overflow-x: hidden;
+            height: 100%;
+        }
+
+        /* Pixel-style container/panel */
+        .pixel-panel {
+            background-color: #424242;
+            border: 4px solid #000000;
+            box-shadow: 8px 8px 0px 0px rgba(0, 0, 0, 1);
+            padding: 24px;
+        }
+
+        /* Pixel-style button */
+        .pixel-button {
+            font-family: 'Press Start 2P', cursive;
+            border: 4px solid #000000;
+            background-color: #E0E0E0;
+            color: #000000;
+            padding: 12px 16px;
+            text-align: center;
+            cursor: pointer;
+            box-shadow: 4px 4px 0px 0px rgba(0, 0, 0, 1);
+            transition: all 0.05s ease-in-out;
+            text-shadow: none;
+        }
+
+        .pixel-button:hover {
+            background-color: #D0D0D0;
+        }
+
+        .pixel-button:active {
+            box-shadow: none;
+            transform: translate(4px, 4px);
+        }
+
+        /* Specific button colors */
+        .pixel-button-primary {
+            background-color: #90EE90;
+            /* Light Green */
+        }
+
+        .pixel-button-primary:hover {
+            background-color: #80E080;
+        }
+
+        .pixel-button-secondary {
+            background-color: #ADD8E6;
+            /* Light Blue */
+        }
+
+        .pixel-button-secondary:hover {
+            background-color: #9CD0E0;
+        }
+
+        .pixel-button-tertiary {
+            background-color: #CDB4DB;
+            /* Light Purple */
+        }
+
+        .pixel-button-tertiary:hover {
+            background-color: #BC9EDB;
+        }
+
+        /* Memory Card Styles */
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            max-width: 340px;
+            /* 4 * 70px + 3 * 12px */
+            margin: auto;
+        }
+
+        .card-container {
+            width: 100%;
+            aspect-ratio: 1 / 1;
+            perspective: 1000px;
+            cursor: pointer;
+        }
+
+        .card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transition: transform 0.5s;
+            transform-style: preserve-3d;
+        }
+
+        .card-container.flipped .card-inner {
+            transform: rotateY(180deg);
+        }
+
+        .card-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 4px solid #000;
+        }
+
+        .card-back {
+            background-color: #757575;
+            color: #000;
+            font-size: 2rem;
+        }
+
+        .card-back:hover {
+            background-color: #9E9E9E;
+        }
+
+        .card-front {
+            background-color: #E0E0E0;
+            color: #303030;
+            transform: rotateY(180deg);
+        }
+
+        .card-front svg {
+            width: 60%;
+            height: 60%;
+        }
+
+        /* Matched card style */
+        .card-container.matched {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .card-container.matched .card-front {
+            background-color: #90EE90;
+            /* Green tint for match */
+        }
+
+        /* Scoreboard */
+        .score-box {
+            border: 4px solid #000;
+            background: #303030;
+            padding: 8px 12px;
+            text-align: center;
+            font-size: 14px;
+        }
+
+        .score-box.active {
+            background: #90EE90;
+            color: #000;
+        }
+
+        /* Hide utility */
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+
+<body class="pixel-theme h-full w-full flex items-center justify-center p-4">
+
+    <div class="w-full max-w-sm">
+
+        <!-- Game Mode Selection Screen -->
+        <div id="start-screen" class="pixel-panel text-center">
+            <h1 class="text-3xl mb-6">PIXEL<br>MATCH</h1>
+            <div class="space-y-4">
+                <button id="solo-btn" class="pixel-button pixel-button-primary w-full text-sm">SOLO (TIMER)</button>
+                <button id="vs-player-btn" class="pixel-button pixel-button-secondary w-full text-sm">VS PLAYER</button>
+                <button id="vs-cpu-btn" class="pixel-button pixel-button-tertiary w-full text-sm">VS CPU</button>
+            </div>
+        </div>
+
+        <!-- Game Screen -->
+        <div id="game-screen" class="hidden">
+            <!-- Info Bar -->
+            <div id="info-bar" class="flex justify-between items-center mb-4">
+                <div id="p1-score-box" class="score-box w-full">
+                    <span id="p1-name">P1</span>: <span id="p1-score">0</span>
+                </div>
+                <div id="p2-score-box" class="score-box w-full hidden">
+                    <span id="p2-name">P2</span>: <span id="p2-score">0</span>
+                </div>
+                <div id="timer-box" class="score-box w-full hidden">
+                    TIME: <span id="timer">0</span>
+                </div>
+            </div>
+
+            <!-- Game Board -->
+            <div id="game-grid" class="card-grid mb-6">
+                <!-- Cards injected by JS -->
+            </div>
+
+            <button id="main-menu-btn" class="pixel-button w-full text-sm">MAIN MENU</button>
+        </div>
+
+        <!-- Winner Overlay -->
+        <div id="winner-screen" class="pixel-panel text-center hidden"
+            style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 10;">
+            <h2 id="winner-text" class="text-2xl mb-6">PLAYER 1 WINS!</h2>
+            <button id="play-again-btn" class="pixel-button pixel-button-primary w-full text-sm">PLAY AGAIN</button>
+        </div>
+
+    </div>
+
+    <!-- Game Logic -->
+    <script>
+        // DOM Elements
+        const startScreen = document.getElementById('start-screen');
+        const gameScreen = document.getElementById('game-screen');
+        const soloBtn = document.getElementById('solo-btn');
+        const vsPlayerBtn = document.getElementById('vs-player-btn');
+        const vsCpuBtn = document.getElementById('vs-cpu-btn');
+
+        const infoBar = document.getElementById('info-bar');
+        const p1ScoreBox = document.getElementById('p1-score-box');
+        const p1NameEl = document.getElementById('p1-name');
+        const p1ScoreEl = document.getElementById('p1-score');
+        const p2ScoreBox = document.getElementById('p2-score-box');
+        const p2NameEl = document.getElementById('p2-name');
+        const p2ScoreEl = document.getElementById('p2-score');
+        const timerBox = document.getElementById('timer-box');
+        const timerEl = document.getElementById('timer');
+
+        const gameGrid = document.getElementById('game-grid');
+        const mainMenuBtn = document.getElementById('main-menu-btn');
+
+        const winnerScreen = document.getElementById('winner-screen');
+        const winnerText = document.getElementById('winner-text');
+        const playAgainBtn = document.getElementById('play-again-btn');
+
+        // --- Sound Effects (Tone.js) ---
+        let soundsReady = false;
+        let flipSound, matchSound, noMatchSound, winSound;
+
+        function initializeSounds() {
+            if (soundsReady || typeof Tone === 'undefined') { // Check if Tone is defined
+                if (typeof Tone === 'undefined') console.error("Tone.js is not loaded. Sounds will be disabled.");
+                return;
+            }
+
+            try {
+                // Use simple synths for a retro feel
+                flipSound = new Tone.Synth({
+                    oscillator: { type: 'square' },
+                    envelope: { attack: 0.01, decay: 0.1, sustain: 0, release: 0.1 },
+                    volume: -10
+                }).toDestination();
+
+                matchSound = new Tone.Synth({
+                    oscillator: { type: 'triangle' },
+                    envelope: { attack: 0.01, decay: 0.2, sustain: 0, release: 0.1 },
+                    volume: -10
+                }).toDestination();
+
+                noMatchSound = new Tone.Synth({
+                    oscillator: { type: 'sawtooth' },
+                    envelope: { attack: 0.01, decay: 0.3, sustain: 0, release: 0.1 },
+                    volume: -15
+                }).toDestination();
+
+                winSound = new Tone.PolySynth(Tone.Synth, {
+                    oscillator: { type: 'square' },
+                    envelope: { attack: 0.01, decay: 0.3, sustain: 0.1, release: 0.1 },
+                    volume: -10
+                }).toDestination();
+
+                soundsReady = true;
+            } catch (e) {
+                console.error("Error initializing Tone.js synths:", e);
+                soundsReady = false;
+            }
+        }
+
+        // Game Icons
+        const icons = [
+            // Ghost (👾)
+            '<svg viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M4 4h8v6H9v1H7v-1H4V4zM5 5v1h1V5H5zm5 0v1h1V5h-1zM4 11h1v1H4v-1zm1 1h1v1H5v-1zm1 1h1v1H6v-1zm1 1h1v1H7v-1zm1 1h1v1H8v-1zm1 1h1v1H9v-1zm1 1h1v1h-1v-1zm1-1h1v1h-1v-1z"/></svg>',
+            // Alien (👽)
+            '<svg viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M4 3h1v1H4V3zm7 0h1v1h-1V3zM3 4h1v1H3V4zm2 0h1v1H5V4zm1 0h1v1H6V4zm1 0h1v1H7V4zm1 0h1v1H8V4zm1 0h1v1H9V4zm2 0h1v1h-1V4zM2 5h1v1H2V5zm1 0h1v1H3V5zm2 0h1v1H5V5zm1 0h1v1H6V5zm1 0h1v1H7V5zm1 0h1v1H8V5zm2 0h1v1h-1V5zm1 0h1v1h-1V5zm1 0h1v1h-1V5zM2 6h1v1H2V6zm11 0h1v1h-1V6zM2 7h1v1H2V7zm2 0h1v1H4V7zm7 0h1v1h-1V7zm2 0h1v1h-1V7zM3 8h1v1H3V8zm1 0h1v1H4V8zm1 0h1v1H5V8zm4 0h1v1H9V8zm1 0h1v1h-1V8zm1 0h1v1h-1V8zM4 9h1v1H4V9zm7 0h1v1h-1V9zM5 10h1v1H5v-1zm5 0h1v1h-1v-1zM6 11h1v1H6v-1zm3 0h1v1H9v-1z"/></svg>',
+            // Skull (💀)
+            '<svg viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M4 2h8v1H4V2zM3 3h10v1H3V3zM3 4h10v1H3V4zM3 5h1v1H3V5zm9 0h1v1h-1V5zM3 6h1v1H3V6zm9 0h1v1h-1V6zM3 7h1v1H3V7zm2 0h2v2H5V7zm4 0h2v2H9V7zm2 0h1v1h-1V7zM3 8h1v1H3V8zm9 0h1v1h-1V8zM3 9h1v1H3V9zm9 0h1v1h-1V9zM4 10h1v1H4v-1zm7 0h1v1h-1v-1zM5 11h1v1H5v-1zm1 0h1v1H6v-1zm2 0h1v1H8v-1zm1 0h1v1H9v-1zM5 12h1v1H5v-1zm5 0h1v1h-1v-1zM6 13h1v1H6v-1zm3 0h1v1H9v-1z"/></svg>',
+            // Heart (❤️)
+            '<svg viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M3 3h3v1H3V3zm7 0h3v1h-3V3zM2 4h1v1H2V4zm3 0h1v1H5V4zm2 0h2v1H7V4zm2 0h1v1H9V4zm3 0h1v1h-1V4zM2 5h1v1H2V5zm10 0h1v1h-1V5zM2 6h1v1H2V6zm10 0h1v1h-1V6zM2 7h1v1H2V7zm10 0h1v1h-1V7zM3 8h1v1H3V8zm9 0h1v1h-1V8zM4 9h1v1H4V9zm7 0h1v1h-1V9zM5 10h1v1H5v-1zm5 0h1v1h-1v-1zM6 11h1v1H6v-1zm3 0h1v1H9v-1zM7 12h1v1H7v-1zm1 0h1v1H8v-1z"/></svg>',
+            // Star (⭐)
+            '<svg viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M7 2h2v1H7V2zM6 3h4v1H6V3zM5 4h6v1H5V4zM3 5h2v1H3V5zm8 0h2v1h-2V5zM2 6h2v1H2V6zm8 0h2v1h-2V6zM1 7h2v1H1V7zm2 0h8v1H3V7zm8 0h2v1h-2V7zM3 8h2v1H3V8zm6 0h2v1H9V8zM4 9h2v1H4V9zm4 0h2v1H8V9zM5 10h1v1H5v-1zm4 0h1v1H9v-1zM6 11h1v1H6v-1zm2 0h1v1H8v-1z"/></svg>',
+            // Diamond (💎)
+            '<svg viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M6 2h4v1H6V2zM5 3h6v1H5V3zM4 4h8v1H4V4zM3 5h10v1H3V5zM2 6h12v1H2V6zM3 7h10v1H3V7zM4 8h8v1H4V8zM5 9h6v1H5V9zM6 10h4v1H6v-1zM7 11h2v1H7v-1z"/></svg>',
+            // Rocket (🚀)
+            '<svg viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M7 2h2v1H7V2zM6 3h4v1H6V3zM6 4h4v1H6V4zM5 5h6v1H5V5zM5 6h6v1H5V6zM5 7h6v1H5V7zM5 8h6v1H5V8zM5 9h6v1H5V9zM4 10h8v1H4v-1zM4 11h1v1H4v-1zm7 0h1v1h-1v-1zM3 12h1v1H3v-1zm9 0h1v1h-1v-1zM5 13h1v1H5v-1zm5 0h1v1h-1v-1z"/></svg>',
+            // Sun (☀️)
+            '<svg viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M7 1h2v1H7V1zM4 2h1v1H4V2zm7 0h1v1h-1V2zM2 4h1v1H2V4zm11 0h1v1h-1V4zM1 7h1v2H1V7zm13 0h1v2h-1V7zM2 11h1v1H2v-1zm11 0h1v1h-1v-1zM4 13h1v1H4v-1zm7 0h1v1h-1v-1zM7 14h2v1H7v-1zM5 5h6v6H5V5z"/></svg>'
+        ];
+
+        // Game State
+        let gameMode = 'solo'; // 'solo', 'vs', 'cpu'
+        let board = [];
+        let flippedCards = [];
+        let matchedCards = [];
+        let currentPlayer = 1;
+        let scores = { 1: 0, 2: 0 };
+        let boardDisabled = false;
+        let timerInterval = null;
+        let seconds = 0;
+        let moves = 0;
+
+        // CPU AI State
+        let cpuMemory = {}; // { "icon_svg": index }
+        let knownPairs = {}; // { "icon_svg": [index1, index2] }
+
+        // --- Event Listeners ---
+
+        soloBtn.addEventListener('click', () => startGame('solo'));
+        vsPlayerBtn.addEventListener('click', () => startGame('vs'));
+        vsCpuBtn.addEventListener('click', () => startGame('cpu'));
+
+        mainMenuBtn.addEventListener('click', () => {
+            gameScreen.classList.add('hidden');
+            winnerScreen.classList.add('hidden');
+            startScreen.classList.remove('hidden');
+            if (timerInterval) clearInterval(timerInterval);
+        });
+
+        playAgainBtn.addEventListener('click', () => {
+            winnerScreen.classList.add('hidden');
+            startGame(gameMode);
+        });
+
+        // --- Game Setup ---
+
+        async function startGame(mode) {
+            // Start audio context on user interaction
+            if (!soundsReady && typeof Tone !== 'undefined') { // Check if Tone exists
+                try {
+                    await Tone.start();
+                    initializeSounds();
+                    console.log("Audio ready!");
+                } catch (e) {
+                    console.error("Error starting Tone.js audio context:", e);
+                    soundsReady = false; // Failed to start
+                }
+            } else if (typeof Tone === 'undefined' && !soundsReady) {
+                // This check runs once if Tone is missing
+                initializeSounds(); // This will log the error
+            }
+
+            gameMode = mode;
+            board = [];
+            flippedCards = [];
+            matchedCards = [];
+            scores = { 1: 0, 2: 0 };
+            currentPlayer = 1;
+            boardDisabled = false;
+            if (timerInterval) clearInterval(timerInterval);
+            seconds = 0;
+            moves = 0;
+            cpuMemory = {};
+            knownPairs = {};
+
+            setupInfoBar();
+            setupBoard();
+
+            startScreen.classList.add('hidden');
+            gameScreen.classList.remove('hidden');
+
+            if (gameMode === 'solo') {
+                timerInterval = setInterval(updateTimer, 1000);
+            }
+        }
+
+        function setupInfoBar() {
+            if (gameMode === 'solo') {
+                p1ScoreBox.classList.remove('hidden');
+                p1NameEl.innerText = "MOVES";
+                p1ScoreEl.innerText = "0";
+                p2ScoreBox.classList.add('hidden');
+                timerBox.classList.remove('hidden');
+                timerEl.innerText = "0";
+                p1ScoreBox.classList.add('active'); // Solo player is always "active"
+            } else {
+                p1ScoreBox.classList.remove('hidden');
+                p1NameEl.innerText = "P1";
+                p1ScoreEl.innerText = "0";
+                p2ScoreBox.classList.remove('hidden');
+                p2NameEl.innerText = (gameMode === 'cpu') ? "CPU" : "P2";
+                p2ScoreEl.innerText = "0";
+                timerBox.classList.add('hidden');
+                updatePlayerHighlight();
+            }
+        }
+
+        function setupBoard() {
+            gameGrid.innerHTML = '';
+            let cardIcons = [...icons, ...icons]; // 8 pairs
+            shuffleArray(cardIcons);
+
+            for (let i = 0; i < 16; i++) {
+                const icon = cardIcons[i];
+                board.push(icon); // Store the icon for this card index
+
+                const card = document.createElement('div');
+                card.className = 'card-container';
+                card.dataset.index = i;
+
+                card.innerHTML = `
+                    <div class="card-inner">
+                        <div class="card-face card-back">?</div>
+                        <div class="card-face card-front">${icon}</div>
+                    </div>
+                `;
+
+                card.addEventListener('click', () => handleCardClick(card));
+                gameGrid.appendChild(card);
+            }
+        }
+
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        // --- Game Logic ---
+
+        function handleCardClick(card) {
+            if (boardDisabled || card.classList.contains('flipped') || card.classList.contains('matched')) {
+                return;
+            }
+
+            if (gameMode === 'cpu' && currentPlayer === 2) {
+                return; // Prevent player from clicking on CPU's turn
+            }
+
+            flipCard(card);
+
+            if (gameMode === 'solo') {
+                moves++;
+                p1ScoreEl.innerText = moves;
+            }
+
+            if (flippedCards.length === 2) {
+                boardDisabled = true;
+                checkForMatch();
+            }
+        }
+
+        function flipCard(card) {
+            card.classList.add('flipped');
+            flippedCards.push(card);
+
+            if (soundsReady) flipSound.triggerAttackRelease("C5", "0.05");
+
+            // AI: Remember this card
+            if (gameMode === 'cpu') {
+                const index = parseInt(card.dataset.index);
+                const icon = board[index];
+                if (!cpuMemory[icon]) {
+                    cpuMemory[icon] = [];
+                }
+                if (!cpuMemory[icon].includes(index)) {
+                    cpuMemory[icon].push(index);
+                }
+                // Check if this new info creates a known pair
+                if (cpuMemory[icon].length === 2) {
+                    knownPairs[icon] = cpuMemory[icon];
+                }
+            }
+        }
+
+        function checkForMatch() {
+            const [card1, card2] = flippedCards;
+            const index1 = parseInt(card1.dataset.index);
+            const index2 = parseInt(card2.dataset.index);
+
+            if (board[index1] === board[index2]) {
+                // It's a match
+                card1.classList.add('matched');
+                card2.classList.add('matched');
+                matchedCards.push(card1, card2);
+
+                if (soundsReady) matchSound.triggerAttackRelease("G5", "0.1", Tone.now() + 0.1);
+
+                if (gameMode !== 'solo') {
+                    scores[currentPlayer]++;
+                    updateScores();
+                }
+
+                boardDisabled = false;
+                flippedCards = [];
+
+                if (matchedCards.length === 16) {
+                    endGame();
+                } else if (gameMode === 'cpu' && currentPlayer === 2) {
+                    // CPU got a match, it goes again
+                    setTimeout(cpuTurn, 1000);
+                }
+
+            } else {
+                // Not a match
+                setTimeout(() => {
+                    card1.classList.remove('flipped');
+                    card2.classList.remove('flipped');
+                    flippedCards = [];
+                    boardDisabled = false;
+
+                    if (soundsReady) noMatchSound.triggerAttackRelease("A2", "0.1");
+
+                    if (gameMode !== 'solo') {
+                        changePlayer();
+                    }
+                }, 1200);
+            }
+        }
+
+        function changePlayer() {
+            currentPlayer = (currentPlayer === 1) ? 2 : 1;
+            updatePlayerHighlight();
+
+            if (gameMode === 'cpu' && currentPlayer === 2) {
+                boardDisabled = true;
+                setTimeout(cpuTurn, 1000);
+            }
+        }
+
+        function updatePlayerHighlight() {
+            p1ScoreBox.classList.toggle('active', currentPlayer === 1);
+            p2ScoreBox.classList.toggle('active', currentPlayer === 2);
+        }
+
+        function updateScores() {
+            p1ScoreEl.innerText = scores[1];
+            p2ScoreEl.innerText = scores[2];
+        }
+
+        function updateTimer() {
+            seconds++;
+            timerEl.innerText = seconds;
+        }
+
+        function endGame() {
+            if (timerInterval) clearInterval(timerInterval);
+
+            let winnerMessage = "";
+            if (gameMode === 'solo') {
+                winnerMessage = `FINISH!<br>TIME: ${seconds}S<br>MOVES: ${moves}`;
+            } else {
+                if (scores[1] > scores[2]) {
+                    winnerMessage = `${p1NameEl.innerText} WINS!`;
+                } else if (scores[2] > scores[1]) {
+                    winnerMessage = `${p2NameEl.innerText} WINS!`;
+                } else {
+                    winnerMessage = "IT'S A DRAW!";
+                }
+            }
+
+            if (soundsReady) winSound.triggerAttackRelease(["C4", "E4", "G4", "C5"], "0.4");
+
+            winnerText.innerHTML = winnerMessage;
+            winnerScreen.classList.remove('hidden');
+        }
+
+        // --- CPU AI Logic ---
+
+        function cpuTurn() {
+            // 1. Check for a known pair
+            let pairToMatch = null;
+            for (const icon in knownPairs) {
+                const [index1, index2] = knownPairs[icon];
+                const card1 = gameGrid.querySelector(`[data-index="${index1}"]`);
+                const card2 = gameGrid.querySelector(`[data-index="${index2}"]`);
+
+                if (!card1.classList.contains('matched') && !card2.classList.contains('matched')) {
+                    pairToMatch = [card1, card2];
+                    delete knownPairs[icon]; // This pair is now being used
+                    break;
+                }
+            }
+
+            if (pairToMatch) {
+                // CPU found a guaranteed match
+                flipCard(pairToMatch[0]);
+                setTimeout(() => {
+                    flipCard(pairToMatch[1]);
+                    checkForMatch(); // This will be a match
+                }, 750);
+                return;
+            }
+
+            // 2. Pick a random unknown card
+            let availableCards = Array.from(gameGrid.children).filter(card =>
+                !card.classList.contains('flipped') && !card.classList.contains('matched')
+            );
+
+            if (availableCards.length === 0) {
+                boardDisabled = false;
+                return; // Should not happen, but just in case
+            }
+
+            shuffleArray(availableCards);
+            const firstCard = availableCards.pop();
+            flipCard(firstCard);
+
+            const firstIcon = board[parseInt(firstCard.dataset.index)];
+
+            // 3. Check if we know the match for this card
+            if (cpuMemory[firstIcon] && cpuMemory[firstIcon].length > 1) {
+                const indices = cpuMemory[firstIcon];
+                const firstIndex = parseInt(firstCard.dataset.index);
+                // Find the *other* index
+                const matchIndex = indices.find(i => i !== firstIndex);
+
+                if (matchIndex !== undefined) {
+                    const secondCard = gameGrid.querySelector(`[data-index="${matchIndex}"]`);
+                    if (secondCard && !secondCard.classList.contains('flipped') && !secondCard.classList.contains('matched')) {
+                        // Found a known match!
+                        setTimeout(() => {
+                            flipCard(secondCard);
+                            checkForMatch();
+                        }, 750);
+                        return;
+                    }
+                }
+            }
+
+            // 4. No known match, pick a second random card
+            const secondCard = availableCards.pop();
+            setTimeout(() => {
+                flipCard(secondCard);
+                checkForMatch();
+            }, 750);
+        }
+
+    </script>
+</body>
+
+</html>
